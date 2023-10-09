@@ -13,6 +13,7 @@
   program is run).
 """
 
+import os        # Used for path command for file checking
 import config    # Configure from .ini files and command line
 import logging   # Better than print statements
 logging.basicConfig(format='%(levelname)s:%(message)s',
@@ -91,8 +92,26 @@ def respond(sock):
 
     parts = request.split()
     if len(parts) > 1 and parts[0] == "GET":
-        transmit(STATUS_OK, sock)
-        transmit(CAT, sock)
+        file_path = parts[1][1:]
+
+        #checking for illegal characters
+        if ".." in file_path or "~" in file_path:
+            transmit(STATUS_FORBIDDEN, sock)
+            transmit("\nForbidden: Illegal characters in the file path.\n", sock)
+        else:
+            file_path = os.path.join("pages", file_path)
+
+            #Checking if file exists
+            if os.path.exists(file_path):
+                transmit(STATUS_OK, sock)
+
+                #Open and transmitting file contents
+                with open(file_path, 'r') as file:
+                    transmit(file.read(), sock)
+
+            else:
+                transmit(STATUS_NOT_FOUND, sock)
+                transmit("\nNot Found: File {} does not exist.\n".format(file_path), sock)
     else:
         log.info("Unhandled request: {}".format(request))
         transmit(STATUS_NOT_IMPLEMENTED, sock)
