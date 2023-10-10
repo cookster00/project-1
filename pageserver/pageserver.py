@@ -91,6 +91,8 @@ def respond(sock):
     log.info("Request was {}\n***\n".format(request))
 
     parts = request.split()
+    cred_file = config.configuration()
+    docroot = cred_file.DOCROOT
     if len(parts) > 1 and parts[0] == "GET":
         file_path = parts[1][1:]
 
@@ -99,7 +101,7 @@ def respond(sock):
             transmit(STATUS_FORBIDDEN, sock)
             transmit("\nForbidden: Illegal characters in the file path.\n", sock)
         else:
-            file_path = os.path.join("pages", file_path)
+            file_path = os.path.join(docroot, file_path)
 
             #Checking if file exists
             if os.path.exists(file_path):
